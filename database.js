@@ -1,5 +1,6 @@
 require("dotenv").config();
 
+const { contextsKey } = require("express-validator/src/base");
 const mysql = require("mysql2/promise");
 
 const database = mysql.createPool({
@@ -24,28 +25,62 @@ database
 
 // getting the movies
 const getMovies = (req, res) => {
-  let sql = "select * from movies";
-  const sqlValues = [];
+  // let sql = "select * from movies";
+  // const sqlValues = [];
+  // if (req.query.color) {
+  //   sql += " where color = ?";
+  //   sqlValues.push(req.query.color);
+  // }
+  // if (req.query.max_duration) {
+  //   sql += " and duration <= ?";
+  //   sqlValues.push(req.query.max_duration);
+  // } else if (req.query.max_duration) {
+  //   sql += " where duration <= ?";
+  //   sqlValues.push(req.query.max_duration);
+  // }
+  // database
+  //   .query(sql, sqlValues)
+  //   .then(([movies]) => {
+  //     res.json(movies);
+  //   })
+  //   .catch((err) => {
+  //     res.status(500).send("Error retrieving data from database", err);
+  //   });
+  // MORE COMPLICATE QUERY !!!!!! vazno da vnimavam
 
-  if (req.query.color) {
-    sql += " where color = ?";
-    sqlValues.push(req.query.color);
+  const initialSql = "select * from movies";
+  const where = [];
+
+  if (req.query.color != null) {
+    where.push({
+      column: "color",
+      value: req.query.color,
+      operator: "=",
+    });
   }
-  if (req.query.max_duration) {
-    sql += " and duration <= ?";
-    sqlValues.push(req.query.max_duration);
-  } else if (req.query.max_duration) {
-    sql += " where duration <= ?";
-    sqlValues.push(req.query.max_duration);
+  if (req.query.max_duration != null) {
+    where.push({
+      column: "duration",
+      value: req.query.max_duration,
+      operator: "<=",
+    });
   }
 
   database
-    .query(sql, sqlValues)
+    .query(
+      where.reduce(
+        (sql, { column, operator }, index) =>
+          `${sql} ${index === 0 ? "where" : "and"} ${column} ${operator} ?`,
+        initialSql
+      ),
+      where.map(({ value }) => value)
+    )
     .then(([movies]) => {
       res.json(movies);
     })
     .catch((err) => {
-      res.status(500).send("Error retrieving data from database", err);
+      console.error(err);
+      res.status(500).send("Error retrieving data from database");
     });
 };
 
@@ -60,17 +95,46 @@ const getMoviesId = (req, res) => {
     }
   });
 };
-// getting the users
-const getUsers = (_, res) => {
+// getting the users // ADD USERS FILTER QUERY !!
+const getUsers = (req, res) => {
+  // ADD FILTER QUERY
+  let sql = "select * from users";
+  const sqlValues = [];
+
+  if (req.query.city != null) {
+    sql += " where city = ?";
+    sqlValues.push(req.query.city);
+  }
+
+  if (req.query.language != null) {
+    sql += " and language = ?";
+    sqlValues.push(req.query.language);
+  }
+
+  // else if(req.body.language != null) {
+  //   sql += "where language = ?";
+  //   where.push(req.query.language)
+  // }
   database
-    .query("select * from users")
-    .then(([users]) => {
-      res.status(200).json(users);
+    .query(sql, sqlValues)
+    .then(([user]) => {
+      console.log(user);
+      res.json(user);
     })
     .catch((err) => {
-      console.log(err);
-      res.sendStatus(404);
+      res.status(500).send("Error retrieving data from database", err);
     });
+
+  // SIMPLE FILTER WAY TO SELECT EVERYTING FROM THE TABLE !!
+  // database
+  //   .query("select * from users")
+  //   .then(([users]) => {
+  //     res.status(200).json(users);
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     res.sendStatus(404);
+  //   });
 };
 // finding users with id
 const getUsersId = (req, res) => {
@@ -103,13 +167,15 @@ const postMovie = (req, res) => {
     });
 };
 
+// POST METHOD WITH USERS!!
 const postUsers = (req, res) => {
-  const { firstname, lastname, email, city, language } = req.body;
+  const { firstname, lastname, email, city, language, hashedPassword } =
+    req.body;
 
   database
     .query(
-      "INSERT INTO users( firstname, lastname, email, city, language ) VALUES (?,?,?,?,?)",
-      [firstname, lastname, email, city, language]
+      "INSERT INTO users( firstname, lastname, email, city, language, hashedPassword ) VALUES (?,?,?,?,?,?)",
+      [firstname, lastname, email, city, language, hashedPassword]
     )
     .then(([users]) => {
       res.location(`/users/${users.insertId}`).sendStatus(201);
@@ -145,13 +211,14 @@ const updateMovies = (req, res) => {
 
 // BUILDING PUT METHOD WITH USERS !!
 const updateUsers = (req, res) => {
-  const { firstname, lastname, email, city, language } = req.body;
+  const { firstname, lastname, email, city, language, hashedPassword } =
+    req.body;
   const id = req.params.id;
 
   database
     .query(
-      "UPDATE users SET firstname =?, lastname=?, email=?, city=?, language=? where id=?",
-      [firstname, lastname, email, city, language, id]
+      "UPDATE users SET firstname =?, lastname=?, email=?, city=?, language=?, hashedPassword=?  where id=? ",
+      [firstname, lastname, email, city, language, hashedPassword, id]
     )
     .then(([user]) => {
       if (!user.affectedRows) {
@@ -196,7 +263,7 @@ const deleteUsers = (req, res) => {
       }
     })
     .catch((err) => {
-      res.status(404).send("anything blablablabla", err);
+      res.status(404).send("anything test blabla", err);
     });
 };
 

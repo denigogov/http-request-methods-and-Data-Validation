@@ -62,18 +62,24 @@ app.get("/users/:id", database.getUsersId);
 const { validateMovies } = require("./validators");
 app.post("/movies", validateMovies, database.postMovie);
 
-// VALIDATE USERS
-const { validateUsers } = require("./validators");
-app.post("/users", validateUsers, database.postUsers);
-
 // PUT METHOD on movies !!
 app.put("/movies/:id", validateMovies, database.updateMovies);
-
-// PUT METHOD on USERS
-app.put("/users/:id", validateUsers, database.updateUsers);
 
 // DELETE METHOD on movies
 app.delete("/movies/:id", database.deleteMovies);
 
+// VALIDATE USERS
+const { validateUsers } = require("./validators");
+app.post("/users", validateUsers, database.postUsers);
+
+// // // PUT METHOD on USERS
+app.put("/users/:id", validateUsers, database.updateUsers);
+
 // DELETE METHOD on users
 app.delete("/users/:id", database.deleteUsers);
+
+// HASHING PASSWORD  USERS!! vazno da vnimavam-------------------------------------
+const { hashpassword } = require("./auth.js");
+
+app.post("/register", hashpassword, database.postUsers);
+app.put("/update/:id", hashpassword, database.updateUsers);
