@@ -1,6 +1,5 @@
 require("dotenv").config();
 
-const { contextsKey } = require("express-validator/src/base");
 const mysql = require("mysql2/promise");
 
 const database = mysql.createPool({
@@ -280,7 +279,7 @@ const getUserByEmailWithPasswordAndPassToNext = (req, res, next) => {
 
         next();
       } else {
-        res.status(401).send("wrong email or password!");
+        res.sendStatus(401);
       }
     })
     .catch((err) => {

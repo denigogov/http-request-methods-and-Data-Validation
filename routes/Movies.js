@@ -3,12 +3,17 @@ const router = express.Router();
 
 const database = require("../database");
 const { validateMovies } = require("../validators");
+const { verifyToken } = require("../auth");
+
+router.use(verifyToken);
 
 router
   .get("/", database.getMovies)
   .get("/:id", database.getMoviesId)
-  .post("/", validateMovies, database.postMovie)
-  .put("/:id", validateMovies, database.updateMovies)
-  .delete("/:id", database.deleteMovies);
+
+  // verify the user with token!
+  .post("/", verifyToken, validateMovies, database.postMovie)
+  .put("/:id", verifyToken, validateMovies, database.updateMovies)
+  .delete("/:id", verifyToken, database.deleteMovies);
 
 module.exports = router;

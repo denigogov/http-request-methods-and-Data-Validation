@@ -3,7 +3,7 @@ const router = express.Router();
 
 const database = require("../database");
 const { validateUsers } = require("../validators");
-const { hashpassword, verifyPassword } = require("../auth");
+const { hashpassword, verifyPassword, verifyToken } = require("../auth");
 
 // Getting the users  using EXPRESS ROUTER AND CHAINING
 router
@@ -18,10 +18,6 @@ router
   .put("/update/:id", validateUsers, hashpassword, database.updateUsers);
 
 // Login page!
-
-const loginPage = (req, res) => {
-  res.send(req.user);
-};
 
 router.post(
   "/login",
