@@ -83,13 +83,17 @@ const userSchema = Joi.object({
   email: Joi.string().email().max(255).required(),
   firstname: Joi.string().max(255).required(),
   lastname: Joi.string().max(255).required(),
+  hashedPassword: Joi.string().min(4).alphanum().required(),
+  city: Joi.string().min(2).max(20),
+  language: Joi.string().min(4),
 });
 
 const validateUsers = (req, res, next) => {
-  const { firstname, lastname, email } = req.body;
+  const { firstname, lastname, email, hashedPassword, city, language } =
+    req.body;
 
   const { error } = userSchema.validate(
-    { firstname, lastname, email },
+    { firstname, lastname, email, hashedPassword, city, language },
     { abortEarly: false }
   );
 

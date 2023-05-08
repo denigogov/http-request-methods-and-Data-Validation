@@ -267,6 +267,28 @@ const deleteUsers = (req, res) => {
     });
 };
 
+const getUserByEmailWithPasswordAndPassToNext = (req, res, next) => {
+  const { email } = req.body;
+  console.log(email);
+
+  database
+    .query("SELECT * FROM users WHERE email = ?", [email])
+    .then(([users]) => {
+      console.log(users);
+      if (users[0] != null) {
+        req.user = users[0];
+
+        next();
+      } else {
+        res.status(401).send("wrong email or password!");
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).send("Error retrieving data from database");
+    });
+};
+
 module.exports = {
   getMovies,
   getMoviesId,
@@ -278,4 +300,5 @@ module.exports = {
   updateUsers,
   deleteMovies,
   deleteUsers,
+  getUserByEmailWithPasswordAndPassToNext,
 };
